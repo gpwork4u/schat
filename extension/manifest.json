@@ -1,17 +1,26 @@
 {
   "manifest_version": 3,
-  "name": "Slack-for-Google-Chat (local bridge)",
+  "name": "Schat — Slack-style client for Google Chat",
   "version": "0.1.0",
-  "description": "在本地跑一個仿 Slack 的前端來操作 Google Chat。本 extension 是橋接層：把 localhost 前端的請求轉送到 chat.google.com 分頁內執行。",
+  "description": "A Slack-style local frontend for Google Chat. This extension is the bridge: it relays the localhost frontend's requests into your open, signed-in chat.google.com tab.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Slack for Google Chat"
+    "default_title": "Schat",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
-  "permissions": ["storage", "tabs", "cookies"],
+  "permissions": ["storage", "tabs"],
   "host_permissions": [
     "https://chat.google.com/*",
-    "https://mail.google.com/*",
-    "https://*.google.com/*",
+    "https://mail.google.com/chat/*",
     "http://localhost/*",
     "http://127.0.0.1/*"
   ],

@@ -131,14 +131,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return false;
   }
 
-  // chrome.cookies is only reachable from the service worker — kept for any
-  // future need to dump google.com auth cookies.
-  if (msg.type === 'dump-google-cookies') {
-    collectGoogleCookies()
-      .then((cookies) => sendResponse({ ok: true, cookies }))
-      .catch((e) => sendResponse({ ok: false, error: String(e?.message || e) }));
-    return true;
-  }
   return false;
 });
 
@@ -151,20 +143,3 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-const RELEVANT_COOKIE_DOMAINS = ['.google.com', 'chat.google.com', 'mail.google.com'];
-async function collectGoogleCookies() {
-  const all = await Promise.all(
-    RELEVANT_COOKIE_DOMAINS.map((domain) => chrome.cookies.getAll({ domain }))
-  );
-  const seen = new Set();
-  const out = [];
-  for (const list of all) {
-    for (const c of list || []) {
-      const key = `${c.domain}|${c.name}|${c.path}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      out.push({ name: c.name, value: c.value, domain: c.domain, path: c.path });
-    }
-  }
-  return out;
-}
