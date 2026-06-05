@@ -79,7 +79,7 @@ cd web && npm install && npm run dev      # → localhost:5173（含 emoji-mart 
   - **`Q3DB7e`** request（webRequest source 撈到真實 6 筆，DM+space 都有）：
     ```
     inner = [ [msgId,null,[msgId,null,GROUPREF]], emojiSeg, 10 ]
-      msgId    = opaque m[0][1]（非數字！如 "xUAl44TgAo4"）
+      msgId    = opaque m[0][1]（非數字！如 "AbCdEf01_Xy"）
       GROUPREF = DM ["dm/<id>","<id>",5] / space ["space/<id>","<id>",2]
       emojiSeg = ["👍"] | [null,[uuid,…]]（同 react payload[1]）
     ```
