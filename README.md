@@ -1,10 +1,12 @@
-# Schat — Slack for Google Chat
+# Schat — a Slack-style client for Google Chat
 
 <p align="center">
   <img src="web/public/favicon.svg" width="72" alt="Schat logo" />
 </p>
 
-一個**高度仿 Slack** 的本地前端，用來操作你自己的 **Google Chat**。沒有後端、沒有 API key、沒有 OAuth —— 純 Chrome extension 橋接，搭你既有的、已登入的 `chat.google.com` 分頁便車，以你本人身分發出所有讀寫。
+一個 **Slack 風格**的本地前端，用來操作你自己的 **Google Chat**。沒有後端、沒有 API key、沒有 OAuth —— 純 Chrome extension 橋接，搭你既有的、已登入的 `chat.google.com` 分頁便車，以你本人身分發出所有讀寫。
+
+> ⚠️ 非官方、與 Google / Slack 無任何關聯的個人專案。詳見下方 [免責聲明](#免責聲明--disclaimer)。
 
 > 把它想成「**Google Chat 官方網頁的遙控器 + 換皮**」，不是獨立 client。
 
@@ -108,8 +110,17 @@ HANDOFF.md                接手者全貌文件（架構、wire format、坑、o
 
 - 這是**個人用、搭自己 session** 的工具，不是官方產品；Google Chat 改私有協定時可能需要重抓封包對照（見 `HANDOFF.md`）。
 - 登入 session 由瀏覽器管理；被迫重新登入時，到 chat 分頁登入後本工具即自動恢復。
-- 請僅用於你自己有權存取的帳號與內容。
+
+## 免責聲明 / Disclaimer
+
+- **無關聯性**：本專案為獨立的個人開源專案，**與 Google LLC、Salesforce/Slack 並無任何關聯、亦未獲其認可或贊助**。"Google Chat"、"Slack" 及相關標誌為其各自所有者之商標；本專案名稱 **Schat** 與其圖示均為原創，文中提及 "Slack 風格" 僅為描述 UI 風格之指稱性使用（nominative use）。
+- **僅限自用、授權範圍內**：本工具僅搭你**本人已登入**的 `chat.google.com` 分頁運作，存取範圍與你本人在官方網頁完全相同。**請僅用於你自己有權存取的帳號與內容**，勿用於未經授權之存取。
+- **服務條款風險**：以非官方方式操作 Google Chat 私有介面，**可能違反 Google 的服務條款**，並可能導致帳號相關後果。是否使用、以及由此產生的一切風險與責任，由使用者自行承擔。若為公司／組織（Workspace）帳號，請另行確認所屬組織之政策。
+- **無擔保**：本軟體依「現狀」提供，**不提供任何明示或默示之擔保**；作者不對任何資料遺失、帳號問題或其他損害負責。
+- 本文件不構成法律意見；如有疑慮請諮詢專業人士。
+
+> English summary: Independent, unofficial, personal project. **Not affiliated with, endorsed, or sponsored by Google or Slack/Salesforce.** Trademarks belong to their owners; "Schat" and its icon are original. The tool only acts through *your own* signed-in Google Chat session — use it solely with accounts and content you are authorized to access. Using unofficial interfaces **may violate Google's Terms of Service**; you assume all risk. Provided **"as is", without warranty of any kind**. Not legal advice.
 
 ## License
 
-MIT
+MIT — 見 [`LICENSE`](LICENSE)。
