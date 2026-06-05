@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { width: 280px; margin: 0; font: 13px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; color: #1d1c1d; }
+    .head { padding: 14px 16px; background: #3f0e40; color: #fff; }
+    .head h1 { margin: 0; font-size: 14px; font-weight: 700; }
+    .head p { margin: 4px 0 0; font-size: 11px; opacity: .75; }
+    .body { padding: 14px 16px; }
+    .row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: #ccc; flex: none; }
+    .dot.ok { background: #2bac76; }
+    .dot.bad { background: #e01e5a; }
+    button { width: 100%; padding: 9px; margin-top: 6px; border: 0; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .primary { background: #007a5a; color: #fff; }
+    .ghost { background: #f0eff1; color: #1d1c1d; }
+    .hint { font-size: 11px; color: #616061; margin-top: 12px; }
+    code { background: #f0eff1; padding: 1px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="head">
+    <h1>Slack for Google Chat</h1>
+    <p>本地橋接層</p>
+  </div>
+  <div class="body">
+    <div class="row"><span id="dot-tab" class="dot"></span><span id="txt-tab">偵測 Google Chat 分頁…</span></div>
+    <button id="open-chat" class="ghost">開啟 Google Chat 分頁</button>
+    <button id="open-app" class="primary">開啟 Slack 前端</button>
+    <div class="hint">前端預設跑在 <code>http://localhost:5173</code>。請先在 <code>web/</code> 執行 <code>npm run dev</code>。</div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

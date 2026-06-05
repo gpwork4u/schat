@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/bridge.ts","./src/main.tsx","./src/richtext.tsx","./src/types.ts","./src/util.ts","./src/components/composer.tsx","./src/components/emojipicker.tsx","./src/components/messagelist.tsx","./src/components/messagerow.tsx","./src/components/richcomposerinput.tsx","./src/components/sidebar.tsx","./src/components/threadpanel.tsx"],"version":"5.9.3"}
