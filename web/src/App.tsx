@@ -117,8 +117,25 @@ export default function App() {
   const notifiedRef = useRef<Set<string>>(new Set());   // messageIds already notified (dedupe)
   const resolvingRef = useRef<Set<string>>(new Set());
   const spacesRef = useRef<Space[]>([]); spacesRef.current = spaces;
+  const messagesByKeyRef = useRef<Record<string, Message[]>>({});
+  messagesByKeyRef.current = messagesByKey;
   const myIdRef = useRef('');
   myIdRef.current = session?.myUserId || myIdRef.current;
+
+  // Fire a desktop notification + chime for an incoming message (dedup by id).
+  // Callers decide WHEN (different channel / tab hidden); this just shows it.
+  const notifyMessage = useCallback((m: Message) => {
+    if (!notifyRef.current || !m?.messageId) return;
+    if (m.senderId && myIdRef.current && m.senderId === myIdRef.current) return; // own echo
+    if (notifiedRef.current.has(m.messageId)) return;
+    notifiedRef.current.add(m.messageId);
+    if (notifiedRef.current.size > 500) notifiedRef.current = new Set([...notifiedRef.current].slice(-200));
+    const sp = spacesRef.current.find((s) => s.spaceKey === m.spaceKey);
+    const where = sp ? (sp.type === 'dm' ? sp.name : `#${sp.name}`) : '新訊息';
+    const title = m.senderName ? `${where} · ${m.senderName}` : where;
+    playChime();
+    showNotification(title, m.body || '（傳送了附件或訊息）', m.spaceKey, () => actionsRef.current.selectSpace?.(m.spaceKey));
+  }, []);
 
   // Apply + persist the colour theme on the document root (covers portaled
   // popovers like the emoji picker / mention menu too).
@@ -286,6 +303,17 @@ export default function App() {
     if (showSpinner) setLoadingMsgs(true);
     try {
       const res = await call<{ messages: Message[] }>('load_space_messages', { spaceKey: key, maxTopics: 30 }, 60000);
+      // Notify on genuinely-new arrivals discovered by this refetch — the realtime
+      // stream mostly fires bodiless 'activity' pings (no 'message' event), so this
+      // is what actually surfaces most incoming messages. Skip the initial load,
+      // and only when the user isn't actively looking at this channel.
+      const before = messagesByKeyRef.current[key] || [];
+      if (before.length) {
+        const oldIds = new Set(before.map((m) => m.messageId));
+        const maxOld = before.reduce((mx, m) => (m.ts > mx ? m.ts : mx), '');
+        const arrivals = res.messages.filter((m) => !m.temp && !oldIds.has(m.messageId) && m.ts > maxOld);
+        if (arrivals.length && (document.hidden || key !== activeRef.current)) arrivals.forEach(notifyMessage);
+      }
       setMessagesByKey((prev) => {
         // Keep optimistic (temp) messages that the fresh fetch doesn't cover yet,
         // so a just-sent message never disappears while the server indexes it.
@@ -304,7 +332,7 @@ export default function App() {
     } finally {
       if (showSpinner) setLoadingMsgs(false);
     }
-  }, [toast, loadMembers]);
+  }, [toast, loadMembers, notifyMessage]);
 
   // Page OLDER history: re-anchor list_topics to the oldest loaded message and
   // PREPEND whatever's older (deduped + re-sorted). list_topics is message-level,
@@ -354,19 +382,9 @@ export default function App() {
     if (inactive) {
       setSpaces((prev) => prev.map((s) => (s.spaceKey === m.spaceKey ? { ...s, unread: (s.unread || 0) + 1 } : s)));
     }
-    // New-message notification: skip our own echoes; notify only when the user
-    // isn't already looking at that channel (different channel OR tab hidden).
-    const mine = !!m.senderId && !!myIdRef.current && m.senderId === myIdRef.current;
-    if (notifyRef.current && !mine && !notifiedRef.current.has(m.messageId) && (inactive || document.hidden)) {
-      notifiedRef.current.add(m.messageId);
-      if (notifiedRef.current.size > 500) notifiedRef.current = new Set([...notifiedRef.current].slice(-200));
-      const sp = spacesRef.current.find((s) => s.spaceKey === m.spaceKey);
-      const where = sp ? (sp.type === 'dm' ? sp.name : `#${sp.name}`) : '新訊息';
-      const title = m.senderName ? `${where} · ${m.senderName}` : where;
-      playChime();
-      showNotification(title, m.body || '（傳送了附件或訊息）', m.spaceKey, () => actionsRef.current.selectSpace?.(m.spaceKey));
-    }
-  }, []);
+    // Notify only when the user isn't already looking at that channel.
+    if (inactive || document.hidden) notifyMessage(m);
+  }, [notifyMessage]);
 
   // Expose latest reload/loadSpaces to event handlers + polling timers.
   actionsRef.current = { reloadSpace: (k: string) => void reloadSpace(k), loadSpaces: () => void loadSpaces(), loadEmojis, selectSpace };
