@@ -1,8 +1,10 @@
-# Schat — a Slack-style client for Google Chat
-
 <p align="center">
-  <img src="web/public/favicon.svg" width="72" alt="Schat logo" />
+  <img src="web/public/favicon.svg" width="120" alt="Schat logo" /><br/>
+  <strong style="font-size:1.6em">Schat</strong><br/>
+  <em>a Slack-style client for Google Chat</em>
 </p>
+
+---
 
 一個 **Slack 風格**的本地前端，用來操作你自己的 **Google Chat**。沒有後端、沒有 API key、沒有 OAuth —— 純 Chrome extension 橋接，搭你既有的、已登入的 `chat.google.com` 分頁便車，以你本人身分發出所有讀寫。
 

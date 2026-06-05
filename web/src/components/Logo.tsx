@@ -1,20 +1,29 @@
-// Schat (Slack-for-Google-Chat) brand mark: a speech bubble holding a
-// Slack-style colored hashtag. `size` controls the square icon; the speech
-// bubble uses currentColor so it adapts to light/dark surfaces.
+import { useId } from 'react';
+
+// Schat brand mark: a gradient "infinity knot" (two interlocked loops) with two
+// small antennae rising from the top — recreated as a transparent vector.
 interface Props { size?: number; className?: string; }
 
 export default function Logo({ size = 24, className }: Props) {
+  const gid = `schat-grad-${useId().replace(/:/g, '')}`;
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none"
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none"
       xmlns="http://www.w3.org/2000/svg" className={className} aria-label="Schat">
-      <path
-        d="M11 7h26a6 6 0 0 1 6 6v13a6 6 0 0 1-6 6H20l-8 7v-7h-1a6 6 0 0 1-6-6V13a6 6 0 0 1 6-6z"
-        fill="currentColor" fillOpacity="0.06" stroke="currentColor" strokeOpacity="0.15" strokeWidth="1.2" />
-      <rect x="11" y="15.3" width="22" height="5" rx="2.5" fill="#36C5F0" />
-      <rect x="11" y="23.5" width="22" height="5" rx="2.5" fill="#E01E5A" />
-      <rect x="15.2" y="11.2" width="5" height="21" rx="2.5" fill="#ECB22E" />
-      <rect x="23.8" y="11.2" width="5" height="21" rx="2.5" fill="#2EB67D" />
-      <rect x="20" y="16.6" width="4" height="4.4" rx="1.4" fill="#fff" fillOpacity="0.9" />
+      <defs>
+        <linearGradient id={gid} gradientUnits="userSpaceOnUse" x1="12" y1="46" x2="52" y2="18">
+          <stop offset="0" stopColor="#8B5CF6" />
+          <stop offset="0.4" stopColor="#3B9EF5" />
+          <stop offset="0.7" stopColor="#2DD4BF" />
+          <stop offset="1" stopColor="#F26D8B" />
+        </linearGradient>
+      </defs>
+      <g stroke={`url(#${gid})`} strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        {/* figure-eight / infinity knot */}
+        <path d="M32 40 C 27 31, 14 31, 14 40 C 14 49, 27 49, 32 40 C 37 31, 50 31, 50 40 C 50 49, 37 49, 32 40 Z" />
+        {/* antennae */}
+        <path d="M22 33 L 18.5 16" />
+        <path d="M42 33 L 45.5 16" />
+      </g>
     </svg>
   );
 }
