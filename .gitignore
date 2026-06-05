@@ -3,3 +3,10 @@ dist/
 *.log
 .DS_Store
 .vite/
+
+# internal handoff doc — keep local, do not publish
+HANDOFF.md
+
+#逐欄位 API 筆記 — keep local, do not publish
+docs/
+*.tsbuildinfo

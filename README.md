@@ -80,7 +80,7 @@ npm run dev          # → http://localhost:5173
 | 訊息刪除 | hover 自己的訊息即可刪 |
 | 深 / 淺色主題 | rail 上方切換、記憶設定 |
 
-> 所有端點與 payload 形狀都是用封包擷取反推**現行 Google Chat (Dynamite) web client 的真實流量**、並以抓到的 response 離線驗證過。詳見 [`HANDOFF.md`](HANDOFF.md) 與 `docs/google-chat-api.md`。
+> 所有端點與 payload 形狀都是用封包擷取反推**現行 Google Chat (Dynamite) web client 的真實流量**、並以抓到的 response 離線驗證過。
 
 ---
 
@@ -102,15 +102,13 @@ web/src/
                       Composer / RichComposerInput / EmojiPicker /
                       DateTimePicker / ScheduledView / Logo
   richtext.tsx        訊息 markdown / 連結 / @mention / 清單渲染
-docs/google-chat-api.md   逐欄位 API 筆記
-HANDOFF.md                接手者全貌文件（架構、wire format、坑、op 一覽）
 ```
 
 ---
 
 ## 注意事項
 
-- 這是**個人用、搭自己 session** 的工具，不是官方產品；Google Chat 改私有協定時可能需要重抓封包對照（見 `HANDOFF.md`）。
+- 這是**個人用、搭自己 session** 的工具，不是官方產品；Google Chat 改私有協定時可能需要重抓封包對照調整。
 - 登入 session 由瀏覽器管理；被迫重新登入時，到 chat 分頁登入後本工具即自動恢復。
 
 ## 免責聲明 / Disclaimer

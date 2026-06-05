@@ -546,7 +546,7 @@
   // --- get_reactors via Q3DB7e batchexecute ---------------------------------
   // Q3DB7e is the legacy batchexecute that lists WHO reacted with a given emoji.
   // Request (form-encoded f.req=<json>&at=<token>) was reverse-engineered from
-  // REAL captured traffic (collector webRequest source records request bodies):
+  // REAL captured traffic (request bodies seen via a webRequest-level capture):
   //   inner = [
   //     [msgId, null, [msgId, null, groupRef]],   // msgId = opaque m[0][1]
   //     emojiSeg,                                  // ["👍"] | [null,[uuid,…]] (== react payload[1])
