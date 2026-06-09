@@ -155,6 +155,31 @@ body {
 }
 .msg .react-chip:hover { border-color: var(--link); }
 
+/* AI auto-reply: settings modal + draft bar */
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; }
+.ai-settings { width: 460px; max-width: 92vw; max-height: 88vh; display: flex; flex-direction: column; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
+.ai-set-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 14px; }
+.ai-set-head button { border: 0; background: transparent; color: var(--text); cursor: pointer; }
+.ai-set-body { padding: 12px 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.ai-field { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.ai-field.col { flex-direction: column; align-items: stretch; gap: 5px; }
+.ai-field > span { flex: none; width: 84px; color: var(--muted, #888); }
+.ai-field.col > span { width: auto; }
+.ai-field input, .ai-field select, .ai-field textarea { flex: 1; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 7px; padding: 6px 8px; font-size: 13px; font-family: inherit; }
+.ai-group { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 9px; }
+.ai-group legend { font-size: 12px; font-weight: 700; color: var(--muted, #888); padding: 0 4px; }
+.ai-check { display: flex; align-items: center; gap: 7px; font-size: 13px; cursor: pointer; }
+.ai-whitelist { max-height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; display: flex; flex-direction: column; gap: 5px; }
+.ai-set-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--border); }
+
+.ai-draft-bar { margin: 0 0 6px; border: 1px solid var(--green); border-radius: 10px; background: color-mix(in srgb, var(--green) 8%, var(--bg-elev)); padding: 8px 10px; }
+.ai-draft-head { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--green); margin-bottom: 4px; }
+.ai-draft-text { font-size: 14px; white-space: pre-wrap; word-break: break-word; margin-bottom: 8px; }
+.ai-draft-actions { display: flex; gap: 7px; }
+.ai-draft-actions button { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border); background: var(--bg-elev); color: var(--text); border-radius: 7px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+.ai-draft-actions button.primary { background: var(--green); border-color: var(--green); color: #fff; font-weight: 700; }
+.ai-draft-actions button:disabled { opacity: .6; cursor: default; }
+
 /* Sidebar nav item (e.g. 已排程訊息) */
 .sidebar-nav {
   display: flex; align-items: center; gap: 8px; width: calc(100% - 16px); margin: 2px 8px 6px;

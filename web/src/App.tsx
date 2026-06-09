@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Space, Message, SessionStatus, BridgeState, SectionInfo, Member, MentionSpec } from './types';
-import { ExternalLink, AlertTriangle, Sun, Moon, Bell, BellOff } from 'lucide-react';
+import { ExternalLink, AlertTriangle, Sun, Moon, Bell, BellOff, Bot } from 'lucide-react';
 import { playChime, ensurePermission, showNotification } from './notify';
 import { call, on, pingBridge } from './bridge';
 import Sidebar from './components/Sidebar';
@@ -8,6 +8,11 @@ import MessageList from './components/MessageList';
 import ThreadPanel from './components/ThreadPanel';
 import Composer from './components/Composer';
 import ScheduledView from './components/ScheduledView';
+import AiSettings from './components/AiSettings';
+import AiDraftBar from './components/AiDraftBar';
+import type { AiConfig, AiDraft } from './ai/types';
+import { loadAiConfig, saveAiConfig, effectiveMode, passesFilter } from './ai/store';
+import { generateReply, type ReplyContext } from './ai/provider';
 import Logo from './components/Logo';
 
 interface Toast { id: number; text: string; err?: boolean; }
@@ -122,6 +127,14 @@ export default function App() {
   const myIdRef = useRef('');
   myIdRef.current = session?.myUserId || myIdRef.current;
 
+  // --- AI auto-reply state ---
+  const [aiConfig, setAiConfig] = useState<AiConfig>(() => loadAiConfig());
+  const aiConfigRef = useRef(aiConfig); aiConfigRef.current = aiConfig;
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiDrafts, setAiDrafts] = useState<Record<string, AiDraft>>({}); // spaceKey → pending draft
+  const aiHandledRef = useRef<Set<string>>(new Set());                   // messageIds already acted on (dedupe)
+  const composerRef = useRef<{ insert: (t: string) => void } | null>(null);
+
   // Fire a desktop notification + chime for an incoming message (dedup by id).
   // Callers decide WHEN (different channel / tab hidden); this just shows it.
   const notifyMessage = useCallback((m: Message) => {
@@ -136,6 +149,8 @@ export default function App() {
     playChime();
     showNotification(title, m.body || '（傳送了附件或訊息）', m.spaceKey, () => actionsRef.current.selectSpace?.(m.spaceKey));
   }, []);
+
+  useEffect(() => { saveAiConfig(aiConfig); }, [aiConfig]);
 
   // Apply + persist the colour theme on the document root (covers portaled
   // popovers like the emoji picker / mention menu too).
@@ -169,6 +184,53 @@ export default function App() {
     setNotify(true);
     playChime();
   }, [notify, toast]);
+
+  // Send text as the user via the extension (AI auto-reply + draft-approve).
+  const sendAiText = useCallback(async (spaceKey: string, threadKey: string | undefined, text: string) => {
+    await call('send_message', { spaceKey, text, threadKey: threadKey || '', sendMode: threadKey ? 'reply' : 'new' }, 30000);
+    setTimeout(() => void actionsRef.current.reloadSpace?.(spaceKey), 1500);
+  }, []);
+
+  // AI auto-reply trigger. Runs on each genuinely-new incoming message; decides
+  // by per-space mode + filter whether to draft or auto-send a reply.
+  const maybeAiReply = useCallback(async (m: Message) => {
+    const cfg = aiConfigRef.current;
+    if (!m?.messageId || !m.spaceKey) return;
+    if (m.senderId && myIdRef.current && m.senderId === myIdRef.current) return; // own message
+    const mode = effectiveMode(cfg, m.spaceKey);
+    if (mode === 'off' || aiHandledRef.current.has(m.messageId)) return;
+    const sp = spacesRef.current.find((s) => s.spaceKey === m.spaceKey);
+    const isDm = sp?.type === 'dm';
+    const mentionsMe = !!m.mentions?.some((x) => x.userId && x.userId === myIdRef.current);
+    if (!passesFilter(cfg, { spaceKey: m.spaceKey, isDm, body: m.body || '', mentionsMe })) return;
+    aiHandledRef.current.add(m.messageId);
+    if (aiHandledRef.current.size > 500) aiHandledRef.current = new Set([...aiHandledRef.current].slice(-200));
+
+    // Build recent context: last ~12 messages of this thread (or channel).
+    const all = messagesByKeyRef.current[m.spaceKey] || [];
+    const scope = m.threadKey ? all.filter((x) => (x.threadKey || x.messageId) === m.threadKey) : all;
+    const history: ReplyContext['history'] = scope.slice(-12).map((x) => ({
+      senderName: x.senderName || '對方', body: x.body || '（附件）',
+      mine: !!x.senderId && x.senderId === myIdRef.current,
+    }));
+    const ctx: ReplyContext = { spaceName: sp?.name || m.spaceKey, isDm, myName: '我', history };
+    try {
+      const text = await generateReply(cfg.provider, cfg.persona, ctx);
+      if (mode === 'auto') { await sendAiText(m.spaceKey, m.threadKey, text); toast('AI 已自動回覆'); }
+      else setAiDrafts((prev) => ({ ...prev, [m.spaceKey]: { spaceKey: m.spaceKey, threadKey: m.threadKey, text, replyToId: m.messageId, createdAt: Date.now() } }));
+    } catch (e) {
+      aiHandledRef.current.delete(m.messageId); // allow retry
+      toast(`AI 回覆失敗：${String((e as Error).message || e)}`, true);
+    }
+  }, [sendAiText, toast]);
+
+  // Approve & send a pending AI draft, then clear it.
+  const aiSendDraft = useCallback(async (d: AiDraft) => {
+    try {
+      await sendAiText(d.spaceKey, d.threadKey, d.text);
+      setAiDrafts((p) => { const n = { ...p }; delete n[d.spaceKey]; return n; });
+    } catch (e) { toast(`送出失敗：${String((e as Error).message || e)}`, true); }
+  }, [sendAiText, toast]);
 
   // --- bridge / session detection ------------------------------------------
   const probe = useCallback(async () => {
@@ -313,6 +375,7 @@ export default function App() {
         const maxOld = before.reduce((mx, m) => (m.ts > mx ? m.ts : mx), '');
         const arrivals = res.messages.filter((m) => !m.temp && !oldIds.has(m.messageId) && m.ts > maxOld);
         if (arrivals.length && (document.hidden || key !== activeRef.current)) arrivals.forEach(notifyMessage);
+        arrivals.forEach((m) => void maybeAiReply(m)); // AI reply fires regardless of focus
       }
       setMessagesByKey((prev) => {
         // Keep optimistic (temp) messages that the fresh fetch doesn't cover yet,
@@ -332,7 +395,7 @@ export default function App() {
     } finally {
       if (showSpinner) setLoadingMsgs(false);
     }
-  }, [toast, loadMembers, notifyMessage]);
+  }, [toast, loadMembers, notifyMessage, maybeAiReply]);
 
   // Page OLDER history: re-anchor list_topics to the oldest loaded message and
   // PREPEND whatever's older (deduped + re-sorted). list_topics is message-level,
@@ -384,7 +447,8 @@ export default function App() {
     }
     // Notify only when the user isn't already looking at that channel.
     if (inactive || document.hidden) notifyMessage(m);
-  }, [notifyMessage]);
+    void maybeAiReply(m); // AI auto-reply (independent of focus / notifications)
+  }, [notifyMessage, maybeAiReply]);
 
   // Expose latest reload/loadSpaces to event handlers + polling timers.
   actionsRef.current = { reloadSpace: (k: string) => void reloadSpace(k), loadSpaces: () => void loadSpaces(), loadEmojis, selectSpace };
@@ -667,6 +731,13 @@ export default function App() {
           {notify ? <Bell size={18} /> : <BellOff size={18} />}
         </button>
         <button
+          className={`railbtn${aiConfig.mode !== 'off' ? ' on' : ''}`}
+          title="AI 自動回覆設定"
+          onClick={() => setAiOpen(true)}
+        >
+          <Bot size={18} />
+        </button>
+        <button
           className="railbtn"
           title={theme === 'dark' ? '切換到淺色模式' : '切換到深色模式'}
           onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
@@ -752,7 +823,16 @@ export default function App() {
                   )}
                 </div>
 
+                {activeKey && aiDrafts[activeKey] && (
+                  <AiDraftBar
+                    draft={aiDrafts[activeKey]}
+                    onSend={() => void aiSendDraft(aiDrafts[activeKey])}
+                    onEdit={() => { composerRef.current?.insert(aiDrafts[activeKey].text); setAiDrafts((p) => { const n = { ...p }; delete n[activeKey]; return n; }); }}
+                    onDismiss={() => setAiDrafts((p) => { const n = { ...p }; delete n[activeKey]; return n; })}
+                  />
+                )}
                 <Composer
+                  ref={composerRef}
                   channelName={activeSpace?.name || ''}
                   members={members}
                   replyTo={replyTo}
@@ -785,6 +865,10 @@ export default function App() {
           <div key={t.id} className={`toast${t.err ? ' err' : ''}`}>{t.text}</div>
         ))}
       </div>
+
+      {aiOpen && (
+        <AiSettings config={aiConfig} spaces={spaces} onClose={() => setAiOpen(false)} onSave={setAiConfig} />
+      )}
     </div>
   );
 }

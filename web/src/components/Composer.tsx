@@ -1,8 +1,10 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { ChevronDown, Clock } from 'lucide-react';
 import type { Message, Member, MentionSpec } from '../types';
 import RichComposerInput, { type MentionHandle } from './RichComposerInput';
 import DateTimePicker from './DateTimePicker';
+
+export interface ComposerHandle { insert: (text: string) => void; }
 
 // Quick schedule presets (Slack-style). Returns epoch ms for the next occurrence.
 function nextAt(hour: number, dayOffset: number): number {
@@ -31,12 +33,16 @@ interface Props {
   onSchedule: (text: string, whenMs: number) => Promise<void>;
 }
 
-export default function Composer({ channelName, members, replyTo, onCancelReply, onSend, onSendImage, onSchedule }: Props) {
+const Composer = forwardRef<ComposerHandle, Props>(function Composer({ channelName, members, replyTo, onCancelReply, onSend, onSendImage, onSchedule }, ref) {
   const [sending, setSending] = useState(false);
   const [text, setText] = useState('');
   const [image, setImage] = useState<PendingImage | null>(null);
   const inputRef = useRef<MentionHandle>(null);
   const hasText = !!text.trim();
+
+  useImperativeHandle(ref, () => ({
+    insert(t: string) { inputRef.current?.setValue(t); setText(t); },
+  }), []);
 
   useEffect(() => { inputRef.current?.focus(); }, [channelName, replyTo]);
 
@@ -165,4 +171,6 @@ export default function Composer({ channelName, members, replyTo, onCancelReply,
       </div>
     </div>
   );
-}
+});
+
+export default Composer;
