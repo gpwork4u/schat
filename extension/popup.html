@@ -21,14 +21,15 @@
 </head>
 <body>
   <div class="head">
-    <h1>Slack for Google Chat</h1>
-    <p>本地橋接層</p>
+    <h1>Schat</h1>
+    <p>Slack-style client for Google Chat</p>
   </div>
   <div class="body">
     <div class="row"><span id="dot-tab" class="dot"></span><span id="txt-tab">偵測 Google Chat 分頁…</span></div>
     <button id="open-chat" class="ghost">開啟 Google Chat 分頁</button>
-    <button id="open-app" class="primary">開啟 Slack 前端</button>
-    <div class="hint">前端預設跑在 <code>http://localhost:5173</code>。請先在 <code>web/</code> 執行 <code>npm run dev</code>。</div>
+    <button id="open-app-ext" class="primary">開啟 Schat（內建，免 server）</button>
+    <button id="open-app-dev" class="ghost">開啟 localhost 開發版</button>
+    <div class="hint">內建版需先在 <code>web/</code> 執行一次 <code>npm run build:ext</code>；開發版需 <code>npm run dev</code>（有 HMR）。</div>
   </div>
   <script src="popup.js"></script>
 </body>

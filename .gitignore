@@ -10,3 +10,6 @@ HANDOFF.md
 #逐欄位 API 筆記 — keep local, do not publish
 docs/
 *.tsbuildinfo
+
+# built in-extension UI (run: cd web && npm run build:ext)
+extension/app/
